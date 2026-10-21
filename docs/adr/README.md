@@ -35,8 +35,7 @@ Accepted の ADR は、このリポジトリで最も優先度の高い文書で
 | [0006](0006-platform-targets.md) | 対応 OS 版と CPU | Proposed | 技術 | G1 開始 |
 | [0007](0007-license-and-publication.md) | ライセンスと公開 | Accepted | プロダクト | — |
 | [0008](0008-name-and-distribution.md) | 名称、公開主体、配布費用 | Proposed | プロダクト | 公開前 |
-
-ADR-0009（内部イベント契約 v1）は `crates/protocol` の実装前に起票する。
+| [0009](0009-event-contract-v1.md) | 内部イベント契約 v1 | Proposed | 技術＋セキュリティ | `crates/protocol` のマージ前 |
 
 ## 未決論点（ADR 未起票）
 
