@@ -1,0 +1,19 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Node / frontend (UI candidate)
+node_modules/
+dist/
+
+# Local-only design handoff material (not published)
+/docs/handoff/
+
+# Local agent configuration
+/.claude/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
