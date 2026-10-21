@@ -25,10 +25,20 @@ crates/adapter-claude/  Claude Code status line: allowlisted field extraction
 crates/adapter-codex/   Codex App Server: fixed read-only RPC
 crates/ipc/             per-OS local IPC
 apps/desktop/           resident UI (Tauri 2 subject to a storage audit)
+schemas/                internal event contract (source of truth)
 tests/fixtures/         synthetic data only
 docs/adr/               architecture decision records
 docs/security/          threat model and storage / network audits
 ```
+
+## Documentation
+
+Specifications and decision records are written in Japanese.
+
+- [Requirements](docs/requirements.md)
+- [Guarantee boundary](docs/security/guarantee-boundary.md) — what "no persistence" means and what is not guaranteed
+- [ADR ledger](docs/adr/README.md)
+- [Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md)
 
 ## License
 
