@@ -31,6 +31,18 @@ docs/adr/               architecture decision records
 docs/security/          threat model and storage / network audits
 ```
 
+## Development
+
+The toolchain is pinned in `rust-toolchain.toml`.
+
+```sh
+cargo fmt --all --check
+cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo test --workspace --all-targets --locked
+```
+
+The internal event contract lives in `schemas/event.schema.json`. The contract tests in `crates/protocol/tests/` judge every fixture in `tests/fixtures/events/` with both the schema and the Rust parser, so a change to one without the other fails CI. Fixtures are synthetic and must stay that way.
+
 ## Documentation
 
 Specifications and decision records are written in Japanese.

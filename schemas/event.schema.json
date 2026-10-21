@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:quotalantern:event:1",
+  "title": "QuotaLantern internal event contract v1",
+  "description": "Normalized event passed from an adapter to the core. QuotaLantern's own contract (ADR-0009), not a provider format. Duplicate keys, payloads over 16 KiB, nesting deeper than 16 and integers written in fraction or exponent notation are rejected by the parser, not by this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "run_id": { "$ref": "#/$defs/ephemeral_id" },
+    "source_id": { "$ref": "#/$defs/ephemeral_id" },
+    "seq": { "$ref": "#/$defs/safe_uint" },
+    "provider": { "enum": ["claude_code", "codex"] },
+    "environment": { "enum": ["macos_native", "windows_native", "wsl2"] },
+    "received_at": { "$ref": "#/$defs/utc_timestamp" },
+    "source_at": {
+      "anyOf": [{ "$ref": "#/$defs/utc_timestamp" }, { "type": "null" }]
+    },
+    "provenance": { "const": "provider_reported" },
+    "metric": {
+      "oneOf": [
+        { "$ref": "#/$defs/quota" },
+        { "$ref": "#/$defs/context" },
+        { "$ref": "#/$defs/token_counter" },
+        { "$ref": "#/$defs/source_state" }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "source_id",
+    "seq",
+    "provider",
+    "environment",
+    "received_at",
+    "source_at",
+    "provenance",
+    "metric"
+  ],
+  "$defs": {
+    "ephemeral_id": {
+      "description": "Random per-run or per-connection UUID v4, lowercase and hyphenated. Never a persistent or real account identifier.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "utc_timestamp": {
+      "description": "RFC 3339 UTC timestamp with a literal Z offset and no leap second.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{1,9})?Z$"
+    },
+    "safe_uint": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "percent": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "quota": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "quota" },
+        "scope": { "const": "account" },
+        "entity_id": { "$ref": "#/$defs/ephemeral_id" },
+        "bucket_id": { "$ref": "#/$defs/ephemeral_id" },
+        "used_percent": { "$ref": "#/$defs/percent" },
+        "window_seconds": {
+          "anyOf": [
+            { "type": "integer", "minimum": 1, "maximum": 315576000 },
+            { "type": "null" }
+          ]
+        },
+        "resets_at": {
+          "anyOf": [{ "$ref": "#/$defs/utc_timestamp" }, { "type": "null" }]
+        }
+      },
+      "required": [
+        "kind",
+        "scope",
+        "entity_id",
+        "bucket_id",
+        "used_percent",
+        "window_seconds",
+        "resets_at"
+      ]
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "context" },
+        "scope": { "const": "session" },
+        "entity_id": { "$ref": "#/$defs/ephemeral_id" },
+        "used_percent": { "$ref": "#/$defs/percent" },
+        "capacity_tokens": {
+          "anyOf": [
+            { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["kind", "scope", "entity_id", "used_percent", "capacity_tokens"]
+    },
+    "token_counter": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "token_counter" },
+        "scope": { "const": "session" },
+        "entity_id": { "$ref": "#/$defs/ephemeral_id" },
+        "counter_epoch": { "$ref": "#/$defs/ephemeral_id" },
+        "category": {
+          "enum": ["total", "input", "output", "cache_read", "cache_write", "reasoning"]
+        },
+        "value": { "$ref": "#/$defs/safe_uint" }
+      },
+      "required": ["kind", "scope", "entity_id", "counter_epoch", "category", "value"]
+    },
+    "source_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "source_state" },
+        "target": { "enum": ["source", "quota", "context", "token_counter"] },
+        "subject_id": {
+          "description": "bucket_id for quota, entity_id for context and token_counter; null means every metric of the target kind from this source.",
+          "anyOf": [{ "$ref": "#/$defs/ephemeral_id" }, { "type": "null" }]
+        },
+        "state": {
+          "enum": [
+            "disabled",
+            "connecting",
+            "waiting",
+            "available",
+            "stale",
+            "unsupported",
+            "auth_required",
+            "error"
+          ]
+        },
+        "error_code": {
+          "enum": [
+            "none",
+            "not_authenticated",
+            "unsupported_version",
+            "invalid_input",
+            "transport_unavailable",
+            "timeout",
+            "privacy_gate_failed",
+            "capacity_exceeded"
+          ]
+        }
+      },
+      "required": ["kind", "target", "subject_id", "state", "error_code"],
+      "if": { "properties": { "target": { "const": "source" } } },
+      "then": { "properties": { "subject_id": { "type": "null" } } }
+    }
+  }
+}

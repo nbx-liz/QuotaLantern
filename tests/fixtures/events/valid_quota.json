@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "run_id": "00000000-0000-4000-8000-000000000001",
+  "source_id": "00000000-0000-4000-8000-000000000002",
+  "seq": 1,
+  "provider": "codex",
+  "environment": "windows_native",
+  "received_at": "2026-10-21T09:00:00Z",
+  "source_at": null,
+  "provenance": "provider_reported",
+  "metric": {
+    "kind": "quota",
+    "scope": "account",
+    "entity_id": "00000000-0000-4000-8000-000000000003",
+    "bucket_id": "00000000-0000-4000-8000-000000000004",
+    "used_percent": 25,
+    "window_seconds": 18000,
+    "resets_at": "2026-10-21T14:00:00Z"
+  }
+}
