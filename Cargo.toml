@@ -1,0 +1,22 @@
+[workspace]
+resolver = "3"
+members = ["crates/protocol"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.99"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nbx-liz/QuotaLantern"
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+dbg_macro = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+unwrap_used = "deny"
+expect_used = "deny"

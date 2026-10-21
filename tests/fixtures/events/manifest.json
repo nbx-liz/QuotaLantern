@@ -1,0 +1,236 @@
+[
+  {
+    "file": "valid_quota.json",
+    "expected_valid": true,
+    "reject_layer": null,
+    "purpose": "Quota snapshot; the window length is an example, not a fixed provider value."
+  },
+  {
+    "file": "valid_quota_nullable.json",
+    "expected_valid": true,
+    "reject_layer": null,
+    "purpose": "Unknown window and reset time are null; provider time with nanoseconds."
+  },
+  {
+    "file": "valid_context.json",
+    "expected_valid": true,
+    "reject_layer": null,
+    "purpose": "Context usage; a separate metric from cumulative tokens."
+  },
+  {
+    "file": "valid_token_counter.json",
+    "expected_valid": true,
+    "reject_layer": null,
+    "purpose": "Single-category cumulative counter; the first value is the baseline."
+  },
+  {
+    "file": "valid_source_state_source.json",
+    "expected_valid": true,
+    "reject_layer": null,
+    "purpose": "Whole-source state without free text."
+  },
+  {
+    "file": "valid_source_state_bucket.json",
+    "expected_valid": true,
+    "reject_layer": null,
+    "purpose": "State scoped to one quota bucket."
+  },
+  {
+    "file": "invalid_unknown_key.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Unknown top-level key carrying identity is rejected."
+  },
+  {
+    "file": "invalid_free_text.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Free text inside a metric is rejected."
+  },
+  {
+    "file": "invalid_percent.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Percent above 100 is rejected, not clamped."
+  },
+  {
+    "file": "invalid_percent_negative.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Negative percent is rejected."
+  },
+  {
+    "file": "invalid_unsafe_integer.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Integer above 2^53-1 is rejected."
+  },
+  {
+    "file": "invalid_window_zero.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Zero-length window is rejected."
+  },
+  {
+    "file": "invalid_identity.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "A real account string is not accepted as an internal identifier."
+  },
+  {
+    "file": "invalid_uuid_uppercase.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Uppercase UUID is rejected; only the canonical lowercase form is accepted."
+  },
+  {
+    "file": "invalid_uuid_braced.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Braced UUID is rejected."
+  },
+  {
+    "file": "invalid_uuid_not_v4.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Non-v4 UUID is rejected."
+  },
+  {
+    "file": "invalid_provider.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Unsupported provider is rejected."
+  },
+  {
+    "file": "invalid_schema_version.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Unsupported schema version is rejected."
+  },
+  {
+    "file": "invalid_missing_nullable.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "A nullable field must still be present."
+  },
+  {
+    "file": "invalid_time_relative.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Relative time text is rejected."
+  },
+  {
+    "file": "invalid_time_offset.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Non-UTC offset is rejected even when it denotes a valid instant."
+  },
+  {
+    "file": "invalid_time_lowercase.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Lowercase t/z separators are rejected."
+  },
+  {
+    "file": "invalid_time_leap_second.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Leap second is rejected."
+  },
+  {
+    "file": "invalid_time_calendar.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Non-existent date passes the pattern; only format validation rejects it in the schema."
+  },
+  {
+    "file": "invalid_source_state_source_subject.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Whole-source state must not name a subject."
+  },
+  {
+    "file": "invalid_metric_mixed_fields.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Fields of another metric kind are rejected."
+  },
+  {
+    "file": "invalid_array_top_level.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Positional (array) form of the envelope is rejected."
+  },
+  {
+    "file": "invalid_array_metric.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Positional (array) form of a metric is rejected."
+  },
+  {
+    "file": "invalid_array_source_state.json",
+    "expected_valid": false,
+    "reject_layer": "schema",
+    "purpose": "Positional (array) form of a source_state is rejected."
+  },
+  {
+    "file": "invalid_duplicate_key.json",
+    "expected_valid": false,
+    "reject_layer": "parser",
+    "purpose": "Duplicate top-level key."
+  },
+  {
+    "file": "invalid_duplicate_kind.json",
+    "expected_valid": false,
+    "reject_layer": "parser",
+    "purpose": "Duplicate tag key inside metric."
+  },
+  {
+    "file": "invalid_integer_fraction.json",
+    "expected_valid": false,
+    "reject_layer": "parser",
+    "purpose": "Integer field written with a fraction."
+  },
+  {
+    "file": "invalid_integer_exponent.json",
+    "expected_valid": false,
+    "reject_layer": "parser",
+    "purpose": "Integer field written with an exponent."
+  },
+  {
+    "file": "invalid_nan.json",
+    "expected_valid": false,
+    "reject_layer": "parser",
+    "purpose": "Non-finite number is not JSON."
+  },
+  {
+    "file": "invalid_integer_negative_zero.json",
+    "expected_valid": false,
+    "reject_layer": "parser",
+    "purpose": "Integer field written as negative zero."
+  },
+  {
+    "file": "invalid_schema_version_fraction.json",
+    "expected_valid": false,
+    "reject_layer": "parser",
+    "purpose": "Schema version written with a fraction is malformed, not an unsupported version."
+  },
+  {
+    "file": "invalid_duplicate_key_context.json",
+    "expected_valid": false,
+    "reject_layer": "parser",
+    "purpose": "Duplicate key inside a context metric."
+  },
+  {
+    "file": "invalid_duplicate_key_token_counter.json",
+    "expected_valid": false,
+    "reject_layer": "parser",
+    "purpose": "Duplicate key inside a token_counter metric."
+  },
+  {
+    "file": "invalid_duplicate_key_source_state.json",
+    "expected_valid": false,
+    "reject_layer": "parser",
+    "purpose": "Duplicate key inside a source_state metric."
+  }
+]
