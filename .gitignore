@@ -9,8 +9,8 @@ dist/
 # Local-only design handoff material (not published)
 /docs/handoff/
 
-# Local agent configuration
-/.claude/
+# Local agent configuration (at any depth)
+.claude/
 
 # Editors and OS
 .idea/
