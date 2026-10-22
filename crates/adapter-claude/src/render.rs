@@ -22,7 +22,9 @@ pub fn render_status(result: &Result<Observation, AdapterError>) -> String {
 
 fn remaining(reading: Reading<QuotaWindow>) -> String {
     match reading {
-        Reading::Available(window) => format!("{}%", (100.0 - window.used.get()).floor()),
+        // `floor(100 - used)` can round up in f64 (`used = 1e-15` gives
+        // 100); `ceil` and the integer subtraction are both exact.
+        Reading::Available(window) => format!("{}%", 100.0 - window.used.get().ceil()),
         Reading::Absent => "—".to_owned(),
         Reading::Invalid => "?".to_owned(),
     }
@@ -30,7 +32,8 @@ fn remaining(reading: Reading<QuotaWindow>) -> String {
 
 fn context(reading: Reading<ContextUsage>) -> String {
     match reading {
-        Reading::Available(usage) => format!("{}%", usage.used.get().floor()),
+        // Adding 0.0 turns a received `-0` into 0, which would print as "-0".
+        Reading::Available(usage) => format!("{}%", usage.used.get().floor() + 0.0),
         Reading::Absent => "—".to_owned(),
         Reading::Invalid => "?".to_owned(),
     }
@@ -65,6 +68,26 @@ mod tests {
     fn rounds_remaining_down() {
         let text = render_status(&Ok(observation(window(23.5), window(0.0), Reading::Absent)));
         assert_eq!(text, "5h残 76% · 7d残 100% · ctx —");
+    }
+
+    #[test]
+    fn never_overstates_remaining_near_integers() {
+        let text = render_status(&Ok(observation(
+            window(1e-15),
+            window(1.0 + f64::EPSILON),
+            Reading::Absent,
+        )));
+        assert_eq!(text, "5h残 99% · 7d残 98% · ctx —");
+    }
+
+    #[test]
+    fn negative_zero_renders_as_zero() {
+        let context = Reading::Available(ContextUsage {
+            used: Percent::new(-0.0).unwrap(),
+            capacity_tokens: None,
+        });
+        let text = render_status(&Ok(observation(window(-0.0), Reading::Absent, context)));
+        assert_eq!(text, "5h残 100% · 7d残 — · ctx 0%");
     }
 
     #[test]
