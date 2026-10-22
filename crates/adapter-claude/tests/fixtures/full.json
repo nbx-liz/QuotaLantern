@@ -1,0 +1,50 @@
+{
+  "hook_event_name": "Status",
+  "session_id": "synthetic-canary-session-0001",
+  "transcript_path": "/home/synthetic-canary-user/.claude/projects/synthetic-canary-project/transcript.jsonl",
+  "cwd": "/home/synthetic-canary-user/synthetic-canary-project",
+  "model": {
+    "id": "synthetic-model",
+    "display_name": "Synthetic"
+  },
+  "workspace": {
+    "current_dir": "/home/synthetic-canary-user/synthetic-canary-project",
+    "project_dir": "/home/synthetic-canary-user/synthetic-canary-project",
+    "added_dirs": ["/home/synthetic-canary-user/other"]
+  },
+  "version": "0.0.0",
+  "output_style": {
+    "name": "default"
+  },
+  "cost": {
+    "total_cost_usd": 0.01234,
+    "total_duration_ms": 45000
+  },
+  "context_window": {
+    "total_input_tokens": 15234,
+    "total_output_tokens": 4521,
+    "context_window_size": 200000,
+    "used_percentage": 8,
+    "remaining_percentage": 92,
+    "current_usage": {
+      "input_tokens": 8500,
+      "output_tokens": 1200,
+      "cache_creation_input_tokens": 5000,
+      "cache_read_input_tokens": 2000
+    }
+  },
+  "rate_limits": {
+    "five_hour": {
+      "used_percentage": 23.5,
+      "resets_at": 1738425600
+    },
+    "seven_day": {
+      "used_percentage": 41.2,
+      "resets_at": 1738857600
+    }
+  },
+  "user_email": "synthetic-canary@example.invalid",
+  "synthetic-canary@example.invalid": {
+    "nested": "synthetic-canary-secret"
+  }
+}
