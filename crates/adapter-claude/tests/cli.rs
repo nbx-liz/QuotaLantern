@@ -60,6 +60,42 @@ fn unexpected_arguments_exit_zero() {
     let output = run(&["--unknown"], b"{}");
     assert!(output.status.success());
     assert_eq!(stdout(&output), "QuotaLantern: 引数が不正です\n");
+    assert!(output.stderr.is_empty());
+}
+
+#[test]
+fn unwritable_shape_path_exits_zero_with_fixed_text() {
+    let path = scratch_file("missing-dir/shape.txt");
+    let output = run(
+        &["--shape", path.to_str().unwrap()],
+        include_bytes!("fixtures/full.json"),
+    );
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "QuotaLantern: shape not recorded\n");
+    assert!(output.stderr.is_empty());
+}
+
+#[cfg(unix)]
+#[test]
+fn shape_mode_replaces_symlinks_and_permissions() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let victim = scratch_file("shape-victim.txt");
+    let link = scratch_file("shape-link.txt");
+    std::fs::write(&victim, "must stay").unwrap();
+    let _ = std::fs::remove_file(&link);
+    std::os::unix::fs::symlink(&victim, &link).unwrap();
+    let output = run(&["--shape", link.to_str().unwrap()], b"{}");
+    assert_eq!(stdout(&output), "QuotaLantern: shape recorded\n");
+    assert_eq!(std::fs::read_to_string(&victim).unwrap(), "must stay");
+    assert!(!std::fs::symlink_metadata(&link).unwrap().is_symlink());
+
+    let existing = scratch_file("shape-existing.txt");
+    std::fs::write(&existing, "old").unwrap();
+    std::fs::set_permissions(&existing, std::fs::Permissions::from_mode(0o644)).unwrap();
+    run(&["--shape", existing.to_str().unwrap()], b"{}");
+    let mode = std::fs::metadata(&existing).unwrap().permissions().mode();
+    assert_eq!(mode & 0o777, 0o600);
 }
 
 fn scratch_file(name: &str) -> PathBuf {
@@ -78,6 +114,7 @@ fn shape_mode_overwrites_file_with_shape_only() {
     );
     assert!(output.status.success());
     assert_eq!(stdout(&output), "QuotaLantern: shape recorded\n");
+    assert!(output.stderr.is_empty());
 
     let shape = std::fs::read_to_string(&path).unwrap();
     assert!(!shape.contains("previous content"));

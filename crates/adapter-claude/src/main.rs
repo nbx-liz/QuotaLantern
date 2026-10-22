@@ -8,9 +8,9 @@
 //! writes input content or library messages to stdout or stderr.
 
 use std::ffi::OsString;
-use std::fs::OpenOptions;
+use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use quotalantern_adapter_claude::{
@@ -59,14 +59,28 @@ fn record_shape(input: Result<Vec<u8>, AdapterError>, path: &Path) -> String {
     }
 }
 
-/// Creates or truncates `path`, readable by the owner only on Unix.
+/// Writes a new sibling file, readable by the owner only on Unix, and renames
+/// it over `path`. A symlink at `path` is replaced rather than followed, and
+/// the permissions of an existing file are not inherited.
 fn write_private(path: &Path, contents: &[u8]) -> io::Result<()> {
+    let mut temp = path.as_os_str().to_owned();
+    temp.push(format!(".{}.tmp", std::process::id()));
+    let temp = PathBuf::from(temp);
+
     let mut options = OpenOptions::new();
-    options.write(true).create(true).truncate(true);
+    options.write(true).create_new(true);
     #[cfg(unix)]
     {
         use std::os::unix::fs::OpenOptionsExt;
         options.mode(0o600);
     }
-    options.open(path)?.write_all(contents)
+    let mut file = options.open(&temp)?;
+    let written = file.write_all(contents);
+    drop(file);
+    let result = written.and_then(|()| fs::rename(&temp, path));
+    if result.is_err() {
+        // Best effort: the write or rename error is what the caller reports.
+        let _ = fs::remove_file(&temp);
+    }
+    result
 }
