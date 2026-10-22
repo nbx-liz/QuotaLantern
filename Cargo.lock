@@ -446,6 +446,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "quotalantern-adapter-claude"
+version = "0.0.0"
+dependencies = [
+ "quotalantern-protocol",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "quotalantern-protocol"
 version = "0.0.0"
 dependencies = [
