@@ -75,7 +75,8 @@ pub enum AdapterError {
     TooLarge,
     /// The input nests deeper than [`MAX_INPUT_DEPTH`].
     TooDeep,
-    /// The input is not JSON, or an allowlisted field has the wrong type.
+    /// The input is not JSON, its top level is not an object, or it repeats
+    /// an allowlisted key.
     Malformed,
 }
 
@@ -106,7 +107,7 @@ pub fn extract(raw: &[u8]) -> Result<Observation, AdapterError> {
     if depth::exceeds(raw, MAX_INPUT_DEPTH) {
         return Err(AdapterError::TooDeep);
     }
-    let parsed: input::StatusInput =
-        serde_json::from_slice(raw).map_err(|_| AdapterError::Malformed)?;
-    Ok(parsed.into_observation())
+    input::parse(raw)
+        .map(input::StatusInput::into_observation)
+        .ok_or(AdapterError::Malformed)
 }

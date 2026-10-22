@@ -112,15 +112,79 @@ fn invalid_reset_time_invalidates_the_window() {
     assert_eq!(run(&input).unwrap().five_hour, Reading::Invalid);
 }
 
+// ADR-0002: a wrong type in an allowlisted field invalidates only its own
+// reading. This test pinned whole-input rejection before the review fix.
 #[test]
-fn wrong_type_in_allowlisted_field_is_malformed() {
-    let mut input = full();
-    input["rate_limits"]["five_hour"]["used_percentage"] = json!("23.5");
-    assert_eq!(run(&input), Err(AdapterError::Malformed));
+fn wrong_type_invalidates_only_its_reading() {
+    let cases = [
+        ("used_percentage", json!("23.5")),
+        ("used_percentage", json!(true)),
+        ("used_percentage", json!([23.5])),
+        ("resets_at", json!(1738425600.0)),
+        ("resets_at", json!(1738425600.5)),
+        ("resets_at", json!(u64::MAX)),
+        ("resets_at", json!({"seconds": 1738425600})),
+    ];
+    for (field, value) in cases {
+        let mut input = full();
+        input["rate_limits"]["five_hour"][field] = value.clone();
+        let observation = run(&input).unwrap();
+        assert_eq!(observation.five_hour, Reading::Invalid, "{field} = {value}");
+        assert!(matches!(observation.seven_day, Reading::Available(_)));
+        assert!(matches!(observation.context, Reading::Available(_)));
+    }
 
+    for value in [json!(200000.0), json!(-1), json!("200000")] {
+        let mut input = full();
+        input["context_window"]["context_window_size"] = value;
+        let observation = run(&input).unwrap();
+        assert_eq!(observation.context, Reading::Invalid);
+        assert!(matches!(observation.five_hour, Reading::Available(_)));
+    }
+}
+
+// Derived structs also accept arrays and fill fields by position.
+#[test]
+fn arrays_never_fill_allowlisted_fields_by_position() {
+    let raw = br#"{"rate_limits":[[5,1738425600],[7]],"context_window":[3]}"#;
+    let observation = extract(raw).unwrap();
+    assert_eq!(observation.five_hour, Reading::Invalid);
+    assert_eq!(observation.seven_day, Reading::Invalid);
+    assert_eq!(observation.context, Reading::Invalid);
+
+    let raw = br#"{"rate_limits":{"five_hour":[5,1738425600]}}"#;
+    let observation = extract(raw).unwrap();
+    assert_eq!(observation.five_hour, Reading::Invalid);
+    assert_eq!(observation.seven_day, Reading::Absent);
+
+    let shape = describe_shape(br#"{"rate_limits":[[5]]}"#).unwrap();
+    assert!(shape.contains("# five_hour\tinvalid\n"), "{shape}");
+}
+
+#[test]
+fn non_object_sections_are_invalid() {
+    for value in [json!(5), json!("x"), json!(true)] {
+        let mut input = full();
+        input["rate_limits"]["seven_day"] = value;
+        let observation = run(&input).unwrap();
+        assert_eq!(observation.seven_day, Reading::Invalid);
+        assert!(matches!(observation.five_hour, Reading::Available(_)));
+    }
+}
+
+#[test]
+fn null_window_alone_is_absent() {
     let mut input = full();
-    input["rate_limits"]["five_hour"]["resets_at"] = json!(1738425600.5);
-    assert_eq!(run(&input), Err(AdapterError::Malformed));
+    input["rate_limits"]["five_hour"] = Value::Null;
+    let observation = run(&input).unwrap();
+    assert_eq!(observation.five_hour, Reading::Absent);
+    assert!(matches!(observation.seven_day, Reading::Available(_)));
+}
+
+#[test]
+fn repeated_allowlisted_key_is_malformed() {
+    let raw = br#"{"context_window":{"used_percentage":1,"used_percentage":2}}"#;
+    assert_eq!(extract(raw), Err(AdapterError::Malformed));
 }
 
 #[test]
@@ -132,7 +196,19 @@ fn unknown_fields_and_arrays_are_skipped() {
 
 #[test]
 fn rejects_malformed_json() {
-    for raw in [&b"not json"[..], b"", b"{", b"[1,2]", b"\"text\""] {
+    let inputs = [
+        &b"not json"[..],
+        b"",
+        b"{",
+        b"[1,2]",
+        b"[]",
+        b"[[5,1738425600]]",
+        b"null",
+        b"5",
+        b"\"text\"",
+        b"{} {}",
+    ];
+    for raw in inputs {
         assert_eq!(extract(raw), Err(AdapterError::Malformed), "{raw:?}");
     }
 }
