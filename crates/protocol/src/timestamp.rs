@@ -16,6 +16,15 @@ impl UtcTimestamp {
         OffsetDateTime::parse(text, &Rfc3339).ok().map(Self)
     }
 
+    /// Converts Unix epoch seconds, as providers report reset times.
+    /// Returns `None` outside years 0000-9999, which the textual form cannot express.
+    pub fn from_unix_seconds(seconds: i64) -> Option<Self> {
+        let instant = OffsetDateTime::from_unix_timestamp(seconds).ok()?;
+        (0..=9999)
+            .contains(&instant.year())
+            .then_some(Self(instant))
+    }
+
     /// The instant as a `time` value (UTC offset).
     pub const fn as_offset_date_time(&self) -> OffsetDateTime {
         self.0
@@ -76,6 +85,17 @@ mod tests {
         ] {
             assert!(UtcTimestamp::parse(text).is_some(), "rejected {text:?}");
         }
+    }
+
+    #[test]
+    fn converts_unix_seconds() {
+        let parsed = UtcTimestamp::parse("2025-02-01T16:00:00Z").unwrap();
+        assert_eq!(UtcTimestamp::from_unix_seconds(1_738_425_600), Some(parsed));
+        assert!(UtcTimestamp::from_unix_seconds(0).is_some());
+        // 10000-01-01T00:00:00Z and the instant just before year 0000.
+        assert!(UtcTimestamp::from_unix_seconds(253_402_300_800).is_none());
+        assert!(UtcTimestamp::from_unix_seconds(-62_167_219_201).is_none());
+        assert!(UtcTimestamp::from_unix_seconds(i64::MAX).is_none());
     }
 
     #[test]
